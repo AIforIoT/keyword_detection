@@ -328,13 +328,15 @@ short int * read_wav( char * dirPath ){
 
   FILE *f = fopen( dirPath, "rb");
 
-  fread(NULL, 1, sizeof(header), f);
+  short int buffHeader[sizeof(header)];
+  fread(buffHeader, 1, sizeof(header), f);
 
   short int buff[sizeof(short int)*16000];
 
   fread(buff, 1, sizeof(buff), f);
 
-  return &buff;
+  return buff;
+  
 }
 
 int main() {
@@ -342,7 +344,7 @@ int main() {
   int layersize_netrnn[] = { 4, 1, 25, 12, 1 };
 
   short int * file;
-  char filename[12] = "iouti1.wav";
+  char filename[12] = "Iouti1.wav";
   file = read_wav( filename );
 
   srand(time(NULL));
