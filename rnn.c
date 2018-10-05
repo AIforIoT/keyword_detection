@@ -377,7 +377,7 @@ int main() {
     	printf("DEBUG: Reading %s\n", de->d_name);
     	short int file[sizeof(short int)*16000]; //1s
     	read_wav( de->d_name , file );
-    	//Now we shoud do the work.
+    	//Ahora calcular fft del señal enventanado y pasar por la red neuronal.
     }
     closedir(dr);
 
