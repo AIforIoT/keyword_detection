@@ -88,10 +88,6 @@ void freeconfig(CONFIG* conf) {
   free(conf);
 }
 
-
-
-
-
 RNN * creaternn(CONFIG * conf) {
 
   RNN * net = (RNN*)malloc(sizeof(RNN));
@@ -151,7 +147,6 @@ RNN * creaternn(CONFIG * conf) {
 
   return net;
 }
-
 
 void freernn(RNN * net) {
   int i;
@@ -339,6 +334,42 @@ void read_wav( char * dirPath, short int* buff ){
   
 }
 
+int save_rnn( RNN * net ) {
+  FILE *network_file;
+  network_file = fopen("network_values.json", "w");
+  if( network_file == NULL ) return 0; //No se ha podido crear el archivo
+  
+
+  fprintf(network_file,"{\nnbneurons:%d,\n", net->nbneurons);
+  fprintf(network_file,"layersize:[%d,%d,%d,%d,%d],\n", net->layersize[0],net->layersize[1],net->layersize[2],net->layersize[3],net->layersize[4]);
+  fprintf(network_file,"n:[\n" );
+  int i, j;
+  //para cada neurona...
+  for(i=0; i< net->nbneurons ; i++){
+  	fprintf(network_file, "{\nlayer:%d,\n",		net->n[i].layer );
+  	fprintf(network_file, "nbsynapsesin:%d,\n", net->n[i].nbsynapsesin );
+  	fprintf(network_file, "bias:%lf,\n",		net->n[i].bias );
+  	fprintf(network_file, "value:%lf,\n", 		net->n[i].value );
+  	fprintf(network_file, "value_prev:%lf,\n", 	net->n[i].value_prev );
+  	fprintf(network_file, "error:%lf,\n", 		net->n[i].error );
+  	fprintf(network_file, "error_prev:%lf,\n", 	net->n[i].error_prev );
+  	fprintf(network_file, "weight:[%lf", 		net->n[i].weight[0]);
+  	for( j=1; j<net->n[i].nbsynapsesin ; j++){
+  		fprintf(network_file, ",%lf", net->n[i].weight[j] );
+  	}
+  	fprintf(network_file, "],\n");
+  	//Synapses i think is no need to save in a file
+
+  	fprintf(network_file, "},\n");
+  }
+
+  fprintf(network_file, "]\n}");
+
+  fclose(network_file);
+  return 1;
+
+}
+
 int main() {
   srand(time(NULL));
   int layersize_netrnn[] = { 4, 1, 25, 12, 1 };
@@ -366,7 +397,7 @@ int main() {
 
     rnnlearnstart(netrnn);
 
-    DIR *dr = opendir("./audios_db");
+    /*DIR *dr = opendir("./audios_db");
 
     if( dr == NULL ) {
     	printf("ERROR: No se pudo abrir el directorio ./audios_db .\n");
@@ -379,8 +410,8 @@ int main() {
     	read_wav( de->d_name , file );
     	//Ahora calcular fft del señal enventanado y pasar por la red neuronal.
     }
-    closedir(dr);
-
+    closedir(dr);*/
+    //entrenando
     for (iter=0; iter < 100; iter++) {
       inc = 1.0*rand()/(RAND_MAX+1.0);
       outc = inc*inc;
@@ -393,6 +424,7 @@ int main() {
 
     global_error2 = 0;
     int k;
+    //calculando error en training
     for (k=0; k < 100; k++) {
       inc = 1.0*rand()/(RAND_MAX+1.0);
       outc = inc*inc;
@@ -408,6 +440,14 @@ int main() {
     global_error2 = sqrt(global_error2);
     if(!isnormal(global_error2)) global_error2 = 100;
     i2++;
+  }
+
+  //////////////////////////////////////////////////////
+  // Save network params in a file
+  //////////////////////////////////////////////////////
+  if( !save_rnn(netrnn) ){
+  	printf("ERROR: Coudn't save the network!\n");
+  	return 0;
   }
 
   //////////////////////////////////////////////////////
