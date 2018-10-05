@@ -4,7 +4,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <dirent.h>
 
 typedef struct _neuron NEURON;
 struct _neuron {
@@ -324,18 +324,18 @@ typedef struct header_file
     int subchunk2_size;     // subchunk2_size denotes the number of samples.
 } header;
 
-short int * read_wav( char * dirPath ){
+void read_wav( char * dirPath, short int* buff ){
 
   FILE *f = fopen( dirPath, "rb");
 
   short int buffHeader[sizeof(header)];
   fread(buffHeader, 1, sizeof(header), f);
 
-  short int buff[sizeof(short int)*16000];
+  //short int buff[sizeof(short int)*16000];//1s
 
   fread(buff, 1, sizeof(buff), f);
 
-  return buff;
+  //return buff;
   
 }
 
@@ -343,9 +343,9 @@ int main() {
   srand(time(NULL));
   int layersize_netrnn[] = { 4, 1, 25, 12, 1 };
 
-  short int * file;
+  /*short int * file;
   char filename[12] = "Iouti1.wav";
-  file = read_wav( filename );
+  file = read_wav( filename );*/
 
   srand(time(NULL));
   CONFIG * configrnn = createconfig(layersize_netrnn);
@@ -357,12 +357,29 @@ int main() {
 
   int iter,i1=0,i2=0;
 
+  struct dirent *de;
+
   //////////////////////////////////////////////////////
   // Training of the Recurrent Neural Network:
   //////////////////////////////////////////////////////
   while(global_error2 > 0.005 && i2<1000) {
 
     rnnlearnstart(netrnn);
+
+    DIR *dr = opendir("./audios_db");
+
+    if( dr == NULL ) {
+    	printf("ERROR: No se pudo abrir el directorio ./audios_db .\n");
+    	return 0;
+    }
+
+    while ((de = readdir(dr)) != NULL) {
+    	printf("DEBUG: Reading %s\n", de->d_name);
+    	short int file[sizeof(short int)*16000]; //1s
+    	read_wav( de->d_name , file );
+    	//Now we shoud do the work.
+    }
+    closedir(dr);
 
     for (iter=0; iter < 100; iter++) {
       inc = 1.0*rand()/(RAND_MAX+1.0);
